@@ -4,11 +4,11 @@
 #define MAX_INPUT_LEN 256
 
 struct matrix{
-    int N;
-    int M;
+    int N; // rows
+    int M; // columns
     int size; // N * M
     double* start;
-}matrix_A, matrix_B;
+};
 
 int load_matrix(char* file_name, struct matrix* mtx) {
     FILE* fp;
@@ -63,18 +63,20 @@ void read_matrix_size(struct matrix* mtx) {
     printf("Insert number of rows N: ");
     fgets(input_buffer, MAX_INPUT_LEN, stdin);
     mtx->N = atoi(input_buffer);
-    printf("N: %d\n", mtx->N);
+    //printf("N: %d\n", mtx->N);
 
     printf("Insert number of columns M: ");
     fgets(input_buffer, MAX_INPUT_LEN, stdin);
     mtx->M = atoi(input_buffer);
-    printf("M: %d\n", mtx->M);
+    //printf("M: %d\n", mtx->M);
 
     mtx->size = mtx->N * mtx->M; // Compute total number of elements
 }
 
 int main(int argc, char const *argv[])
 {
+    struct matrix matrix_A, matrix_B, matrix_C;
+
     // Ask for matrix A size
     printf("Matrix A\n");
     read_matrix_size(&matrix_A);
@@ -99,14 +101,43 @@ int main(int argc, char const *argv[])
 
     // Multiply matrices
     // Sequential
+    matrix_C.N = matrix_A.N;
+    matrix_C.M = matrix_B.M;
+    matrix_C.size = matrix_C.N * matrix_C.M;
+    matrix_C.start = (double*)malloc(matrix_C.size * sizeof(double));
+    
+    double acum = 0;
+    for (int i = 0; i < matrix_A.N; i++) {
+        for (int j = 0; j < matrix_B.M; j++) {
+            for (int k = 0; k < matrix_B.N; k++) {
+                acum += matrix_A.start[k + (i*matrix_A.M)] * matrix_B.start[j + (k*matrix_B.M)];
+            }
+            matrix_C.start[j + (i*matrix_C.M)] = acum;
+            acum = 0;
+        }
+    }
 
     // Parallel 1
 
     // Parallel 2
 
-    // Store result
+    // Print result into a file called matrixC.txt
+    for (int i = 0; i < matrix_C.N; i++) {
+        for (int j = 0; j < matrix_C.M; j++)
+        {
+            // Replace this with a fprintf to the file
+            printf("%.10f\t", matrix_C.start[j + (i*matrix_C.M)]);
+        }
+        // Format has to 
+        printf("\n");
+    }
+
+    // Print whether sequential result matches parallel code
+
+    // Print table with time for each execution
 
     free(matrix_A.start);
     free(matrix_B.start);
+    free(matrix_C.start);
     return 0;
 }
