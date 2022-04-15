@@ -4,13 +4,50 @@
 #define MAX_INPUT_LEN 256
 
 struct matrix{
-    int N; // rows
-    int M; // columns
+    union {
+        int N; // rows
+        int rows;
+    };
+    union {
+        int M; // columns
+        int columns;
+    };
     int size; // N * M
-    double* start;
+    double** start;
 };
 
-int load_matrix(char* file_name, struct matrix* mtx) {
+void free_matrix(struct matrix* mtx_p) {
+    // First, free each row
+    for (int i = 0; i < mtx_p->N; i++)
+    {
+        free(mtx_p->start[i]);    
+    }
+    // Then free the double pointer
+    free(mtx_p->start);
+    mtx_p->start = NULL;
+}
+
+int allocate_matrix(struct matrix* mtx_p) {
+    // Allocate the necessary rows as pointers to double
+    mtx_p->start = (double**)malloc(mtx_p->N*sizeof(double*));
+    if (mtx_p->start == NULL) {
+        printf("Error: Memory allocation failed\n");
+        return 1;
+    }
+
+    // Allocate space for every column in each row
+    for (int i = 0; i < mtx_p->N; i++)
+    {
+        mtx_p->start[i] = (double*)malloc(mtx_p->M*sizeof(double));
+        if (mtx_p->start[i] == NULL) {
+            printf("Error: Memory allocation failed\n");
+            return 1;
+        }
+    }
+    return 0;
+}
+
+int load_matrix(char* file_name, struct matrix* mtx_p) {
     FILE* fp;
     char * line = NULL;
     size_t len = 0;
@@ -24,29 +61,38 @@ int load_matrix(char* file_name, struct matrix* mtx) {
         return 1;
     }
 
-    mtx->start = (double*)malloc(mtx->size*sizeof(double));
-    if (mtx->start == NULL) {
-        printf("Error: Memory allocation failed\n");
-        return 1;
+    // Allocate space for the matrix
+    int ret = 0;
+    ret = allocate_matrix(mtx_p);
+    if (ret) {
+        return 1; // malloc failed
     }
-
+    
     // https://stackoverflow.com/questions/3501338/c-read-file-line-by-line
-    while ((read = getline(&line, &len, fp)) != -1) {
-        if (rows_counter > mtx->size) {
-            printf("Error: Matrix is larger than specified\n");
-            free(mtx->start);
-            mtx->start = NULL;
-            return 1;
+    int EOF_found = 0;
+    for (int i = 0; i < mtx_p->N && !EOF_found; i++) {
+        for (int j = 0; j < mtx_p->M && !EOF_found; j++) {
+            read = getline(&line, &len, fp);
+            if (read == EOF) {
+                EOF_found = 1;
+            }
+
+            // Check if file has more numbers than expected
+            if (rows_counter > mtx_p->size) {
+                printf("Error: Matrix is larger than specified\n");
+                free_matrix(mtx_p);
+                return 1;
+            }
+
+            mtx_p->start[i][j] = atof(line);
+            rows_counter++;
         }
-
-        *(mtx->start + rows_counter) = atof(line);
-        rows_counter++;
     }
-
-    if (rows_counter < mtx->size) {
+    
+    // Check if file has less numbers than expected
+    if (rows_counter < mtx_p->size) {
         printf("Error: Matrix is smaller than specified\n");
-        free(mtx->start);
-        mtx->start = NULL;
+        free_matrix(mtx_p);
         return 1;
     }
 
@@ -57,20 +103,20 @@ int load_matrix(char* file_name, struct matrix* mtx) {
     return 0;
 }
 
-void read_matrix_size(struct matrix* mtx) {
+void read_matrix_size(struct matrix* mtx_p) {
     char input_buffer[MAX_INPUT_LEN];
 
     printf("Insert number of rows N: ");
     fgets(input_buffer, MAX_INPUT_LEN, stdin);
-    mtx->N = atoi(input_buffer);
+    mtx_p->N = atoi(input_buffer);
     //printf("N: %d\n", mtx->N);
 
     printf("Insert number of columns M: ");
     fgets(input_buffer, MAX_INPUT_LEN, stdin);
-    mtx->M = atoi(input_buffer);
+    mtx_p->M = atoi(input_buffer);
     //printf("M: %d\n", mtx->M);
 
-    mtx->size = mtx->N * mtx->M; // Compute total number of elements
+    mtx_p->size = mtx_p->N * mtx_p->M; // Compute total number of elements
 }
 
 int main(int argc, char const *argv[])
@@ -104,15 +150,15 @@ int main(int argc, char const *argv[])
     matrix_C.N = matrix_A.N;
     matrix_C.M = matrix_B.M;
     matrix_C.size = matrix_C.N * matrix_C.M;
-    matrix_C.start = (double*)malloc(matrix_C.size * sizeof(double));
+    allocate_matrix(&matrix_C);
     
     double acum = 0;
-    for (int i = 0; i < matrix_A.N; i++) {
-        for (int j = 0; j < matrix_B.M; j++) {
-            for (int k = 0; k < matrix_B.N; k++) {
-                acum += matrix_A.start[k + (i*matrix_A.M)] * matrix_B.start[j + (k*matrix_B.M)];
+    for (int i = 0; i < matrix_A.rows; i++) {
+        for (int j = 0; j < matrix_B.columns; j++) {
+            for (int k = 0; k < matrix_B.rows; k++) {
+                acum += matrix_A.start[i][k] * matrix_B.start[k][j];
             }
-            matrix_C.start[j + (i*matrix_C.M)] = acum;
+            matrix_C.start[i][j] = acum;
             acum = 0;
         }
     }
@@ -122,11 +168,11 @@ int main(int argc, char const *argv[])
     // Parallel 2
 
     // Print result into a file called matrixC.txt
-    for (int i = 0; i < matrix_C.N; i++) {
-        for (int j = 0; j < matrix_C.M; j++)
+    for (int i = 0; i < matrix_C.rows; i++) {
+        for (int j = 0; j < matrix_C.columns; j++)
         {
             // Replace this with a fprintf to the file
-            printf("%.10f\t", matrix_C.start[j + (i*matrix_C.M)]);
+            printf("%.10f\t", matrix_C.start[i][j]);
         }
         // Format has to 
         printf("\n");
