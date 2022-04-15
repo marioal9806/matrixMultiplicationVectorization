@@ -36,7 +36,7 @@ int allocate_matrix(struct matrix* mtx_p) {
     }
 
     // Allocate space for every column in each row
-    for (int i = 0; i < mtx_p->M; i++)
+    for (int i = 0; i < mtx_p->N; i++)
     {
         mtx_p->start[i] = (double*)malloc(mtx_p->M*sizeof(double));
         if (mtx_p->start[i] == NULL) {
