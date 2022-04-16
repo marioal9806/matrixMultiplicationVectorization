@@ -145,6 +145,16 @@ int main(int argc, char const *argv[])
         printf("Error: Matrices were not loaded correctly\n");
     }
 
+    double temp = 0;
+    //Transpose matrix_B
+    for (int r=0; r < matrix_B.rows; r++){
+        for (int c=r+1; c<matrix_B.columns; c++){
+            temp = matrix_B.start[r][c];
+            matrix_B.start[r][c] = matrix_B.start[c][r];
+            matrix_B.start[c][r] = temp;
+        }
+    }
+
     // Multiply matrices
     // Sequential
     matrix_C.N = matrix_A.N;
@@ -156,7 +166,7 @@ int main(int argc, char const *argv[])
     for (int i = 0; i < matrix_A.rows; i++) {
         for (int j = 0; j < matrix_B.columns; j++) {
             for (int k = 0; k < matrix_B.rows; k++) {
-                acum += matrix_A.start[i][k] * matrix_B.start[k][j];
+                acum += matrix_A.start[i][k] * matrix_B.start[j][k];
             }
             matrix_C.start[i][j] = acum;
             acum = 0;
