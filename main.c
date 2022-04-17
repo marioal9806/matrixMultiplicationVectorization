@@ -119,6 +119,17 @@ void read_matrix_size(struct matrix* mtx_p) {
     mtx_p->size = mtx_p->N * mtx_p->M; // Compute total number of elements
 }
 
+void transpose_matrix(struct matrix* mtx){
+    double temp = 0;
+    for (int r=0; r < mtx->rows; r++){
+        for (int c=r+1; c<mtx->columns; c++){
+            temp = mtx->start[r][c];
+            mtx->start[r][c] = mtx->start[c][r];
+            mtx->start[c][r] = temp;
+        }
+    }
+}
+
 int main(int argc, char const *argv[])
 {
     struct matrix matrix_A, matrix_B, matrix_C;
@@ -145,15 +156,8 @@ int main(int argc, char const *argv[])
         printf("Error: Matrices were not loaded correctly\n");
     }
 
-    double temp = 0;
     //Transpose matrix_B
-    for (int r=0; r < matrix_B.rows; r++){
-        for (int c=r+1; c<matrix_B.columns; c++){
-            temp = matrix_B.start[r][c];
-            matrix_B.start[r][c] = matrix_B.start[c][r];
-            matrix_B.start[c][r] = temp;
-        }
-    }
+    transpose_matrix(&matrix_B);
 
     // Multiply matrices
     // Sequential
@@ -174,6 +178,7 @@ int main(int argc, char const *argv[])
     }
 
     // Parallel 1
+    
 
     // Parallel 2
 
