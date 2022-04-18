@@ -2,6 +2,7 @@
 #include <stdlib.h>
 
 #define MAX_INPUT_LEN 256
+#define OUTPUT_FILE "matrixC.txt"
 
 struct matrix{
     union {
@@ -20,7 +21,8 @@ void free_matrix(struct matrix* mtx_p) {
     // First, free each row
     for (int i = 0; i < mtx_p->N; i++)
     {
-        free(mtx_p->start[i]);    
+        free(mtx_p->start[i]);
+        mtx_p->start[i] = NULL;
     }
     // Then free the double pointer
     free(mtx_p->start);
@@ -130,6 +132,37 @@ void transpose_matrix(struct matrix* mtx){
     }
 }
 
+int save_matrix(struct matrix* mtx_p) {
+    FILE* fp;
+
+    fp = fopen(OUTPUT_FILE, "w");
+    if (fp == NULL) {
+        printf("Error: File %s cannot be open\n", OUTPUT_FILE);
+        return 1;
+    }
+
+    // Print result into a file called matrixC.txt
+    for (int i = 0; i < mtx_p->rows; i++) {
+        for (int j = 0; j < mtx_p->columns; j++)
+        {
+            fprintf(fp, "%.10f\n", mtx_p->start[i][j]);
+        }
+    }
+
+    fclose(fp);
+    return 0;
+}
+
+void print_matrix(struct matrix* mtx_p) {
+    for (int i = 0; i < mtx_p->rows; i++) {
+        for (int j = 0; j < mtx_p->columns; j++)
+        {
+            printf("%.10f\t", mtx_p->start[i][j]);
+        }
+        printf("\n");
+    }
+}
+
 int main(int argc, char const *argv[])
 {
     struct matrix matrix_A, matrix_B, matrix_C;
@@ -149,11 +182,12 @@ int main(int argc, char const *argv[])
     }
 
     // Load matrices
-    int ret;
-    ret = load_matrix("test/matrixA.txt", &matrix_A);
-    ret = load_matrix("test/matrixB.txt", &matrix_B);
+    int ret = 0;
+    ret |= load_matrix("test/matrixA.txt", &matrix_A);
+    ret |= load_matrix("test/matrixB.txt", &matrix_B);
     if (ret) {
         printf("Error: Matrices were not loaded correctly\n");
+        return 1;
     }
 
     //Transpose matrix_B
@@ -183,22 +217,15 @@ int main(int argc, char const *argv[])
     // Parallel 2
 
     // Print result into a file called matrixC.txt
-    for (int i = 0; i < matrix_C.rows; i++) {
-        for (int j = 0; j < matrix_C.columns; j++)
-        {
-            // Replace this with a fprintf to the file
-            printf("%.10f\t", matrix_C.start[i][j]);
-        }
-        // Format has to 
-        printf("\n");
-    }
+    save_matrix(&matrix_C);
+    print_matrix(&matrix_C);
 
     // Print whether sequential result matches parallel code
 
     // Print table with time for each execution
 
-    free(matrix_A.start);
-    free(matrix_B.start);
-    free(matrix_C.start);
+    free_matrix(&matrix_A);
+    free_matrix(&matrix_B);
+    free_matrix(&matrix_C);
     return 0;
 }
