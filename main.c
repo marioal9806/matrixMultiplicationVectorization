@@ -121,6 +121,17 @@ void read_matrix_size(struct matrix* mtx_p) {
     mtx_p->size = mtx_p->N * mtx_p->M; // Compute total number of elements
 }
 
+void transpose_matrix(struct matrix* mtx){
+    double temp = 0;
+    for (int r=0; r < mtx->rows; r++){
+        for (int c=r+1; c<mtx->columns; c++){
+            temp = mtx->start[r][c];
+            mtx->start[r][c] = mtx->start[c][r];
+            mtx->start[c][r] = temp;
+        }
+    }
+}
+
 int save_matrix(struct matrix* mtx_p) {
     FILE* fp;
 
@@ -179,6 +190,9 @@ int main(int argc, char const *argv[])
         return 1;
     }
 
+    //Transpose matrix_B
+    transpose_matrix(&matrix_B);
+
     // Multiply matrices
     // Sequential
     matrix_C.N = matrix_A.N;
@@ -190,7 +204,7 @@ int main(int argc, char const *argv[])
     for (int i = 0; i < matrix_A.rows; i++) {
         for (int j = 0; j < matrix_B.columns; j++) {
             for (int k = 0; k < matrix_B.rows; k++) {
-                acum += matrix_A.start[i][k] * matrix_B.start[k][j];
+                acum += matrix_A.start[i][k] * matrix_B.start[j][k];
             }
             matrix_C.start[i][j] = acum;
             acum = 0;
@@ -198,6 +212,7 @@ int main(int argc, char const *argv[])
     }
 
     // Parallel 1
+    
 
     // Parallel 2
 
