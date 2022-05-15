@@ -128,7 +128,6 @@ void read_matrix_size(struct matrix* mtx_p) {
 }
 
 void transpose_matrix(struct matrix* mtx){
-
     struct matrix m_aux;
     m_aux.rows = mtx ->columns;
     m_aux.columns = mtx ->rows;
@@ -218,6 +217,7 @@ int main(int argc, char const *argv[])
         return 1;
     }
 
+
     printf("MATRIX A:\n");
     print_matrix(&matrix_A);
 
@@ -225,6 +225,13 @@ int main(int argc, char const *argv[])
     print_matrix(&matrix_B);
 
     // Prepare matrix_C
+
+    //Transpose matrix_B
+    transpose_matrix(&matrix_B);
+
+    // Multiply matrices
+    // Sequential
+
     matrix_C.N = matrix_A.N;
     matrix_C.M = matrix_B.M;
     matrix_C.size = matrix_C.N * matrix_C.M;
