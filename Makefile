@@ -4,6 +4,10 @@ DEBUG_FLAGS=-g -Wall
 main: main.c
 	gcc $(DEBUG_FLAGS) $(VECT_FLAGS) main.c -o main
 
+# Runs the program to multiply 3x2 matrices
+# 1) Sets the test/ directory
+# 2) Creates the files with the appropriate number of items
+# 3) Runs the executable (you must pass user input manually)
 test3x2: main
 	rm -rf ./test/
 	mkdir ./test/
