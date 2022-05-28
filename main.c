@@ -89,6 +89,10 @@ int load_matrix(char* file_name, struct matrix* mtx_p) {
             if (rows_counter > mtx_p->size) {
                 printf("Error: Matrix is larger than specified\n");
                 free_matrix(mtx_p);
+                fclose(fp);
+                if (line) {
+                    free(line);
+                }
                 return 1;
             }
 
@@ -101,6 +105,10 @@ int load_matrix(char* file_name, struct matrix* mtx_p) {
     if (rows_counter < mtx_p->size) {
         printf("Error: Matrix is smaller than specified\n");
         free_matrix(mtx_p);
+        fclose(fp);
+        if (line) {
+            free(line);
+        }
         return 1;
     }
 
