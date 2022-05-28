@@ -6,6 +6,8 @@ Dafne Avelin Durón Castán
 
 #include <stdio.h>
 #include <stdlib.h>
+#include <time.h>
+#include <omp.h>
 
 #define MAX_INPUT_LEN 256
 #define OUTPUT_FILE "./test/matrixC.txt"
@@ -212,14 +214,11 @@ void print_matrix(struct matrix* mtx_p) {
 __attribute__((optimize("no-tree-vectorize")))
 void multiply_matrix(struct matrix* mtx_a_p, struct matrix* mtx_b_p, struct matrix* mtx_c_p){
     // Sequential matrix multiplication
-    double acum = 0;
     for (int i = 0; i < mtx_a_p->rows; i++) {
         for (int j = 0; j < mtx_b_p->rows; j++) {
             for (int k = 0; k < mtx_b_p->columns; k++) {
-                acum += mtx_a_p->start[i][k] * mtx_b_p->start[j][k];
+                mtx_c_p->start[i][j] += mtx_a_p->start[i][k] * mtx_b_p->start[j][k];
             }
-            mtx_c_p->start[i][j] = acum;
-            acum = 0;
         }
     }
 }
@@ -234,6 +233,25 @@ void multiply_matrix_autovec(struct matrix* mtx_a_p, struct matrix* mtx_b_p, str
             }
             mtx_c_p->start[i][j] = acum;
             acum = 0;
+        }
+    }
+}
+
+__attribute__((optimize("no-tree-vectorize")))
+void multiply_matrix_omp(struct matrix* mtx_a_p, struct matrix* mtx_b_p, struct matrix* mtx_c_p) {
+    double acum = 0;
+    #pragma omp parallel
+    {
+        //int i,j,k;
+        #pragma omp for reduction(+:acum)
+        for (int i = 0; i < mtx_a_p->rows; i++) {
+            for (int j = 0; j < mtx_b_p->rows; j++) {
+                for (int k = 0; k < mtx_b_p->columns; k++) {
+                    acum += mtx_a_p->start[i][k] * mtx_b_p->start[j][k];
+                }
+                mtx_c_p->start[i][j] = acum;
+                acum = 0;
+            }
         }
     }
 }
@@ -272,11 +290,11 @@ int main(int argc, char const *argv[])
     }
 
 
-    printf("MATRIX A:\n");
-    print_matrix(&matrix_A);
+    //printf("MATRIX A:\n");
+    //print_matrix(&matrix_A);
 
-    printf("MATRIX B:\n");
-    print_matrix(&matrix_B);
+    //printf("MATRIX B:\n");
+    //print_matrix(&matrix_B);
 
     // Prepare matrix_C
     matrix_C.N = matrix_A.N;
@@ -290,17 +308,44 @@ int main(int argc, char const *argv[])
     // Multiply matrices
 
     // -.- Sequential -.-
+    clock_t start_seq, end_seq;
+
+    start_seq = clock();
     multiply_matrix(&matrix_A, &matrix_B, &matrix_C);
+    end_seq = clock();
+
+    printf("Sequential took %ld\n", end_seq - start_seq);
 
     // -.- Parallel 1 -.-
+    clock_t start_autovec, end_autovec;
+    start_autovec = clock();
     multiply_matrix_autovec(&matrix_A, &matrix_B, &matrix_C);
+    end_autovec = clock();
+
+    printf("Autovectorization took %ld\n", end_autovec - start_autovec);
 
     // -.- Parallel 2 -.-
+    clock_t startOpenMp, endOpenMP;
+
+    int nThreads = 10;
+    omp_set_num_threads(nThreads);
+
+    // int i,j,k;
+    // double acum = 0;
+
+    startOpenMp = clock();
+    multiply_matrix_omp(&matrix_A, &matrix_B, &matrix_C);
+    endOpenMP = clock();
+
+
+    
+    printf("OpenMp = %ld\n", endOpenMP - startOpenMp);
+
 
     // Print result into a file called matrixC.txt  
     save_matrix(&matrix_C);
-    printf("MATRIX C:\n");
-    print_matrix(&matrix_C);
+    //printf("MATRIX C:\n");
+    //print_matrix(&matrix_C);
 
     // Print whether sequential result matches parallel code
 
