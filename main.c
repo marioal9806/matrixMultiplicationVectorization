@@ -8,7 +8,7 @@ Dafne Avelin Durón Castán
 #include <stdlib.h>
 
 #define MAX_INPUT_LEN 256
-#define OUTPUT_FILE "matrixC.txt"
+#define OUTPUT_FILE "./test/matrixC.txt"
 
 struct matrix{
     union {
@@ -111,20 +111,30 @@ int load_matrix(char* file_name, struct matrix* mtx_p) {
     return 0;
 }
 
-void read_matrix_size(struct matrix* mtx_p) {
+int read_matrix_size(struct matrix* mtx_p) {
     char input_buffer[MAX_INPUT_LEN];
+    char* ret = NULL;
 
     printf("Insert number of rows N: ");
-    fgets(input_buffer, MAX_INPUT_LEN, stdin);
+    ret = fgets(input_buffer, MAX_INPUT_LEN, stdin);
+    if(ret == NULL) {
+        printf("Error: Invalid input\n");
+        return 1;
+    }
     mtx_p->N = atoi(input_buffer);
     //printf("N: %d\n", mtx->N);
 
     printf("Insert number of columns M: ");
-    fgets(input_buffer, MAX_INPUT_LEN, stdin);
+    ret = fgets(input_buffer, MAX_INPUT_LEN, stdin);
+    if(ret == NULL) {
+        printf("Error: Invalid input\n");
+        return 1;
+    }
     mtx_p->M = atoi(input_buffer);
     //printf("M: %d\n", mtx->M);
 
     mtx_p->size = mtx_p->N * mtx_p->M; // Compute total number of elements
+    return 0;
 }
 
 void transpose_matrix(struct matrix* mtx){
@@ -190,17 +200,54 @@ void print_matrix(struct matrix* mtx_p) {
     }
 }
 
+// Disable autovectorization for this function
+__attribute__((optimize("no-tree-vectorize")))
+void multiply_matrix(struct matrix* mtx_a_p, struct matrix* mtx_b_p, struct matrix* mtx_c_p){
+    // Sequential matrix multiplication
+    double acum = 0;
+    for (int i = 0; i < mtx_a_p->rows; i++) {
+        for (int j = 0; j < mtx_b_p->rows; j++) {
+            for (int k = 0; k < mtx_b_p->columns; k++) {
+                acum += mtx_a_p->start[i][k] * mtx_b_p->start[j][k];
+            }
+            mtx_c_p->start[i][j] = acum;
+            acum = 0;
+        }
+    }
+}
+
+void multiply_matrix_autovec(struct matrix* mtx_a_p, struct matrix* mtx_b_p, struct matrix* mtx_c_p) {
+    // Optimized matrix multiplication using Autovectorization and AVX2 instruction set
+    double acum = 0;
+    for (int i = 0; i < mtx_a_p->rows; i++) {
+        for (int j = 0; j < mtx_b_p->rows; j++) {
+            for (int k = 0; k < mtx_b_p->columns; k++) {
+                acum += mtx_a_p->start[i][k] * mtx_b_p->start[j][k];
+            }
+            mtx_c_p->start[i][j] = acum;
+            acum = 0;
+        }
+    }
+}
+
 int main(int argc, char const *argv[])
 {
     struct matrix matrix_A, matrix_B, matrix_C;
+    int ret = 0;
 
     // Ask for matrix A size
     printf("Matrix A\n");
-    read_matrix_size(&matrix_A);
-    
+    ret = read_matrix_size(&matrix_A);
+    if (ret) {
+        return 1;
+    }
+
     // Ask for matrix B size
     printf("Matrix B\n");
-    read_matrix_size(&matrix_B);
+    ret = read_matrix_size(&matrix_B);
+    if (ret) {
+        return 1;
+    }
 
     // Check for valid multiplication
     if (matrix_A.M != matrix_B.N) {
@@ -209,7 +256,6 @@ int main(int argc, char const *argv[])
     }
 
     // Load matrices
-    int ret = 0;
     ret |= load_matrix("test/matrixA.txt", &matrix_A);
     ret |= load_matrix("test/matrixB.txt", &matrix_B);
     if (ret) {
@@ -225,13 +271,6 @@ int main(int argc, char const *argv[])
     print_matrix(&matrix_B);
 
     // Prepare matrix_C
-
-    //Transpose matrix_B
-    transpose_matrix(&matrix_B);
-
-    // Multiply matrices
-    // Sequential
-
     matrix_C.N = matrix_A.N;
     matrix_C.M = matrix_B.M;
     matrix_C.size = matrix_C.N * matrix_C.M;
@@ -243,19 +282,10 @@ int main(int argc, char const *argv[])
     // Multiply matrices
 
     // -.- Sequential -.-
-    
-    double acum = 0;
-    for (int i = 0; i < matrix_A.rows; i++) {
-        for (int j = 0; j < matrix_B.rows; j++) {
-            for (int k = 0; k < matrix_B.columns; k++) {
-                acum += matrix_A.start[i][k] * matrix_B.start[j][k];
-            }
-            matrix_C.start[i][j] = acum;
-            acum = 0;
-        }
-    }
+    multiply_matrix(&matrix_A, &matrix_B, &matrix_C);
 
     // -.- Parallel 1 -.-
+    multiply_matrix_autovec(&matrix_A, &matrix_B, &matrix_C);
 
     // -.- Parallel 2 -.-
 
