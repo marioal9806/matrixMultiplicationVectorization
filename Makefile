@@ -30,6 +30,8 @@ test1024x1024: main
 	head -n 1048576 sample_data/matrixB1048576.txt > ./test/matrixB.txt
 	./main
 
+# The file will have less items than the expected given the matrix dimensions
+# When run, input 50 as the matrix size for both matrix A and B
 test-smaller-than-expected: main
 	rm -rf ./test/
 	mkdir ./test/
@@ -37,11 +39,22 @@ test-smaller-than-expected: main
 	head -n 2000 sample_data/matrixB2500.txt > ./test/matrixB.txt
 	./main
 
+# The file will have more items than the expected given the matrix dimensions
+# When run, input any number less than 50 as the matrix size for both matrix A and B
 test-larger-than-expected: main
 	rm -rf ./test/
 	mkdir ./test/
-	head -n 2000 sample_data/matrixA2500.txt > ./test/matrixA.txt
-	head -n 2000 sample_data/matrixB2500.txt > ./test/matrixB.txt
+	head -n 2500 sample_data/matrixA2500.txt > ./test/matrixA.txt
+	head -n 2500 sample_data/matrixB2500.txt > ./test/matrixB.txt
+	./main
+
+# Input a number larger than what malloc can return to you
+# Tested value for the dims was 1000000000
+test-too-large-for-malloc:
+	rm -rf ./test/
+	mkdir ./test/
+	head -n 2500 sample_data/matrixA2500.txt > ./test/matrixA.txt
+	head -n 2500 sample_data/matrixB2500.txt > ./test/matrixB.txt
 	./main
 
 clean:
