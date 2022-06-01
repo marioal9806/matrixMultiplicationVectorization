@@ -80,8 +80,8 @@ int load_matrix(char* file_name, struct matrix* mtx_p) {
     
     // https://stackoverflow.com/questions/3501338/c-read-file-line-by-line
     int EOF_found = 0;
-    for (int i = 0; i < mtx_p->N && !EOF_found; i++) {
-        for (int j = 0; j < mtx_p->M && !EOF_found; j++) {
+    for (int i = 0; (i < mtx_p->N + 1) && !EOF_found; i++) {
+        for (int j = 0; (j < mtx_p->M + 1) && !EOF_found; j++) {
             read = getline(&line, &len, fp);
             if (read == EOF) {
                 EOF_found = 1;
@@ -89,7 +89,7 @@ int load_matrix(char* file_name, struct matrix* mtx_p) {
 
             // Check if file has more numbers than expected
             if (rows_counter > mtx_p->size) {
-                printf("Error: Matrix is larger than specified\n");
+                printf("Error: File has more items than expected\n");
                 free_matrix(mtx_p);
                 fclose(fp);
                 if (line) {
@@ -105,7 +105,7 @@ int load_matrix(char* file_name, struct matrix* mtx_p) {
     
     // Check if file has less numbers than expected
     if (rows_counter < mtx_p->size) {
-        printf("Error: Matrix is smaller than specified\n");
+        printf("Error: File has less items than expected\n");
         free_matrix(mtx_p);
         fclose(fp);
         if (line) {
@@ -147,11 +147,12 @@ int read_matrix_size(struct matrix* mtx_p) {
     return 0;
 }
 
-void transpose_matrix(struct matrix* mtx){
+void transpose_matrix(struct matrix* mtx_p){
     struct matrix m_aux;
-    m_aux.rows = mtx ->columns;
-    m_aux.columns = mtx ->rows;
-    m_aux.size = mtx->columns * mtx->rows;
+    // Aux matrix will have the transposed dimensions of mtx_p
+    m_aux.rows = mtx_p->columns;
+    m_aux.columns = mtx_p->rows;
+    m_aux.size = mtx_p->columns * mtx_p->rows;
 
     // Allocate space for the auxiliar matrix
     allocate_matrix(&m_aux);
@@ -159,24 +160,24 @@ void transpose_matrix(struct matrix* mtx){
     //Transpose
     for (int i = 0; i < m_aux.columns; ++i){
         for (int j = 0; j < m_aux.rows; ++j) {
-            m_aux.start[j][i] = mtx->start[i][j];
+            m_aux.start[j][i] = mtx_p->start[i][j];
         }
     }
 
-    int tempC = mtx->columns;
-    mtx->columns = m_aux.columns;
+    int tempC = mtx_p->columns;
+    mtx_p->columns = m_aux.columns;
     m_aux.columns = tempC;
 
-    int tempR = mtx->rows;
-    mtx->rows = m_aux.rows;
+    int tempR = mtx_p->rows;
+    mtx_p->rows = m_aux.rows;
     m_aux.rows = tempR;
 
-    double** temp = mtx->start;
-    mtx->start = m_aux.start;
-    m_aux.start = temp;
+    double* temp = *(mtx_p->start);
+    *(mtx_p->start) = *(m_aux.start);
+    *(m_aux.start) = temp;
 
     // Free the space of the auxiliar matrix 
-    free_matrix(&m_aux);
+    free_matrix(&m_aux);    
 }
 
 int save_matrix(struct matrix* mtx_p) {
@@ -262,14 +263,14 @@ int main(int argc, char const *argv[])
     int ret = 0;
 
     // Ask for matrix A size
-    printf("Matrix A\n");
+    printf("\nMatrix A\n");
     ret = read_matrix_size(&matrix_A);
     if (ret) {
         return 1;
     }
 
     // Ask for matrix B size
-    printf("Matrix B\n");
+    printf("\nMatrix B\n");
     ret = read_matrix_size(&matrix_B);
     if (ret) {
         return 1;
