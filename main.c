@@ -9,6 +9,8 @@ Dafne Avelin Durón Castán
 #include <time.h>
 #include <omp.h>
 
+#include "table.h"
+
 #define MAX_INPUT_LEN 256
 #define OUTPUT_FILE "./test/matrixC.txt"
 
@@ -257,6 +259,27 @@ void multiply_matrix_omp(struct matrix* mtx_a_p, struct matrix* mtx_b_p, struct 
     }
 }
 
+void print_metrics() {
+    // https://blog.fourthwoods.com/2013/06/17/pretty-print-tables/
+    struct table_t* table = table_init(stdout, (unsigned char*)"Time Metrics Table", 1);
+
+	table_row(table, (unsigned char*)"%s%s%s%s", "Corrida", "Serial", "Paralelo 1", "Paralelo 2");
+
+	table_separator(table);
+
+    table_row(table, (unsigned char*)"%d%s%s%s", 1, "Tiempo 1", "Tiempo 1", "Tiempo 1");
+    table_row(table, (unsigned char*)"%d%s%s%s", 2, "Tiempo 2", "Tiempo 2", "Tiempo 2");
+    table_row(table, (unsigned char*)"%d%s%s%s", 3, "Tiempo 3", "Tiempo 3", "Tiempo 3");
+    table_row(table, (unsigned char*)"%d%s%s%s", 4, "Tiempo 4", "Tiempo 4", "Tiempo 4");
+    table_row(table, (unsigned char*)"%d%s%s%s", 5, "Tiempo 5", "Tiempo 5", "Tiempo 5");
+    table_separator(table);
+    table_row(table, (unsigned char*)"%s%s%s%s", "Promedio", "Promedio", "Promedio", "Promedio");
+    table_separator(table);
+    table_row(table, (unsigned char*)"%s%s%s%s", "% vs Serial", "-", "Promedio P1/Promedio Serial", "Promedio P2/Promedio Serial");
+
+	table_commit(table);
+}
+
 int main(int argc, char const *argv[])
 {
     struct matrix matrix_A, matrix_B, matrix_C;
@@ -351,6 +374,7 @@ int main(int argc, char const *argv[])
     // Print whether sequential result matches parallel code
 
     // Print table with time for each execution
+    print_metrics();
 
     free_matrix(&matrix_A);
     free_matrix(&matrix_B);
