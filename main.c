@@ -149,7 +149,7 @@ int read_matrix_size(struct matrix* mtx_p) {
     return 0;
 }
 
-void transpose_matrix(struct matrix* mtx_p){
+/*void transpose_matrix(struct matrix* mtx_p){
     struct matrix m_aux;
     // Aux matrix will have the transposed dimensions of mtx_p
     m_aux.rows = mtx_p->columns;
@@ -180,7 +180,7 @@ void transpose_matrix(struct matrix* mtx_p){
 
     // Free the space of the auxiliar matrix 
     free_matrix(&m_aux);    
-}
+}*/
 
 int save_matrix(struct matrix* mtx_p) {
     FILE* fp;
@@ -261,7 +261,7 @@ void multiply_matrix_omp(struct matrix* mtx_a_p, struct matrix* mtx_b_p, struct 
 
 int main(int argc, char const *argv[])
 {
-    struct matrix matrix_A, matrix_B, matrix_C;
+    struct matrix matrix_A, matrix_B, matrix_C,  matrix_CAutoV,  matrix_COMP;
     int ret = 0;
 
     // Ask for matrix A size
@@ -293,10 +293,12 @@ int main(int argc, char const *argv[])
     }
 
     // Prepare matrix_C
-    matrix_C.N = matrix_A.N;
-    matrix_C.M = matrix_B.M;
-    matrix_C.size = matrix_C.N * matrix_C.M;
+    matrix_C.N = matrix_CAutoV.N = matrix_COMP.N = matrix_A.N;
+    matrix_C.M = matrix_CAutoV.M = matrix_COMP.M = matrix_B.M;
+    matrix_C.size = matrix_CAutoV.size = matrix_COMP.size = matrix_C.N * matrix_C.M;
     allocate_matrix(&matrix_C);
+    allocate_matrix(&matrix_CAutoV);
+    allocate_matrix(&matrix_COMP);
 
     // -.- -.- -.- -.- Transpose matrix_B -.- -.- -.- -.-
     //transpose_matrix(&matrix_B);
@@ -334,7 +336,7 @@ int main(int argc, char const *argv[])
     clock_t start_seq, end_seq;
 
     start_seq = clock();
-    //multiply_matrix(&matrix_A, &m_aux, &matrix_C);
+    multiply_matrix(&matrix_A, &m_aux, &matrix_C);
     end_seq = clock();
 
     printf("Sequential took %ld\n", end_seq - start_seq);
@@ -345,7 +347,7 @@ int main(int argc, char const *argv[])
     // -.- Parallel 1 -.-
     clock_t start_autovec, end_autovec;
     start_autovec = clock();
-    //multiply_matrix_autovec(&matrix_A, &m_aux, &matrix_C);
+    multiply_matrix_autovec(&matrix_A, &m_aux, &matrix_CAutoV);
     end_autovec = clock();
 
     printf("Autovectorization took %ld\n", end_autovec - start_autovec);
@@ -363,7 +365,7 @@ int main(int argc, char const *argv[])
     // double acum = 0;
 
     startOpenMp = clock();
-    //multiply_matrix_omp(&matrix_A, &m_aux, &matrix_C);
+    multiply_matrix_omp(&matrix_A, &m_aux, &matrix_COMP);
     endOpenMP = clock();
     
     printf("OpenMp took %ld\n", endOpenMP - startOpenMp);
@@ -376,18 +378,22 @@ int main(int argc, char const *argv[])
     //save_matrix(&matrix_C);
 
     // Print whether sequential result matches parallel code
-    /*bool flagError = false;
+    int flagError = 0;
     for(int i=0; i > matrix_C.rows; i++){
         for(int j=0; j > matrix_C.columns; j++){
-            if(){
-                flagError = true;
+            if(matrix_C.start[i][j] != matrix_CAutoV.start[i][j]){
+                flagError = 1;
                 printf("Error Sequential != Autovec in row: %d, column: %d\n", i , j);
-            }else if(){
-                flagError = true;
+            }else if(matrix_C.start[i][j] != matrix_COMP.start[i][j]){
+                flagError = 1;
                 printf("Error Sequential != OpenMP in row: %d, column: %d\n", i , j);
             }
         }
-    }*/
+    }
+
+    if(flagError == 0){
+        printf("FINE :) \n");
+    }
 
     // Print table with time for each execution
 
