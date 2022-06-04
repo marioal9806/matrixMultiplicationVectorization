@@ -5,6 +5,7 @@ Dafne Avelin Durón Castán
 */
 
 #include <stdio.h>
+#include <string.h>
 #include <stdlib.h>
 #include <time.h>
 #include <omp.h>
@@ -29,6 +30,7 @@ struct matrix{
 
 void free_matrix(struct matrix* mtx_p) {
     // First, free each row
+    printf("aquí\n");
     for (int i = 0; i < mtx_p->N; i++)
     {
         free(mtx_p->start[i]);
@@ -82,8 +84,8 @@ int load_matrix(char* file_name, struct matrix* mtx_p) {
     
     // https://stackoverflow.com/questions/3501338/c-read-file-line-by-line
     int EOF_found = 0;
-    for (int i = 0; (i < mtx_p->N + 1) && !EOF_found; i++) {
-        for (int j = 0; (j < mtx_p->M + 1) && !EOF_found; j++) {
+    for (int i = 0; (i < mtx_p->N) && !EOF_found; i++) {
+        for (int j = 0; (j < mtx_p->M) && !EOF_found; j++) {
             read = getline(&line, &len, fp);
             if (read == EOF) {
                 EOF_found = 1;
@@ -149,7 +151,7 @@ int read_matrix_size(struct matrix* mtx_p) {
     return 0;
 }
 
-void transpose_matrix(struct matrix* mtx_p){
+/*void transpose_matrix(struct matrix* mtx_p){
     struct matrix m_aux;
     // Aux matrix will have the transposed dimensions of mtx_p
     m_aux.rows = mtx_p->columns;
@@ -180,7 +182,7 @@ void transpose_matrix(struct matrix* mtx_p){
 
     // Free the space of the auxiliar matrix 
     free_matrix(&m_aux);    
-}
+}*/
 
 int save_matrix(struct matrix* mtx_p) {
     FILE* fp;
@@ -282,7 +284,7 @@ void print_metrics() {
 
 int main(int argc, char const *argv[])
 {
-    struct matrix matrix_A, matrix_B, matrix_C;
+    struct matrix matrix_A, matrix_B, matrix_C,  matrix_CAutoV,  matrix_COMP;
     int ret = 0;
 
     // Ask for matrix A size
@@ -313,40 +315,68 @@ int main(int argc, char const *argv[])
         return 1;
     }
 
-
-    //printf("MATRIX A:\n");
-    //print_matrix(&matrix_A);
-
-    //printf("MATRIX B:\n");
-    //print_matrix(&matrix_B);
-
     // Prepare matrix_C
-    matrix_C.N = matrix_A.N;
-    matrix_C.M = matrix_B.M;
-    matrix_C.size = matrix_C.N * matrix_C.M;
+    matrix_C.N = matrix_CAutoV.N = matrix_COMP.N = matrix_A.N;
+    matrix_C.M = matrix_CAutoV.M = matrix_COMP.M = matrix_B.M;
+    matrix_C.size = matrix_CAutoV.size = matrix_COMP.size = matrix_C.N * matrix_C.M;
     allocate_matrix(&matrix_C);
+    allocate_matrix(&matrix_CAutoV);
+    allocate_matrix(&matrix_COMP);
 
-    //Transpose matrix_B
-    transpose_matrix(&matrix_B);
+    // -.- -.- -.- -.- Transpose matrix_B -.- -.- -.- -.-
+    //transpose_matrix(&matrix_B);
 
-    // Multiply matrices
+    struct matrix m_aux;
+
+    // Aux matrix will have the transposed dimensions of mtx_p
+    m_aux.rows = matrix_B.columns;
+    m_aux.columns = matrix_B.rows;
+    m_aux.size = matrix_B.columns * matrix_B.rows;
+
+    // Allocate space for the auxiliar matrix
+    allocate_matrix(&m_aux);
+
+    //Transpose
+    for (int i = 0; i < m_aux.columns; ++i){
+        for (int j = 0; j < m_aux.rows; ++j) {
+            //memcpy(&m_aux.start[j][i], &matrix_B.start[i][j], sizeof(double));
+            m_aux.start[j][i] = matrix_B.start[i][j];
+        }
+    }
+
+    // -.- -.- -.- -.- Multiply matrices -.- -.- -.- -.- 
+
+    printf("MATRIX A:\n");
+    print_matrix(&matrix_A);
+
+    printf("MATRIX B:\n");
+    print_matrix(&matrix_B);
+
+    printf("MATRIX AUX:\n");
+    print_matrix(&m_aux);
 
     // -.- Sequential -.-
     clock_t start_seq, end_seq;
 
     start_seq = clock();
-    multiply_matrix(&matrix_A, &matrix_B, &matrix_C);
+    multiply_matrix(&matrix_A, &m_aux, &matrix_C);
     end_seq = clock();
 
     printf("Sequential took %ld\n", end_seq - start_seq);
+    printf("MATRIX C:\n");
+    print_matrix(&matrix_C);
+    printf("\n");
 
     // -.- Parallel 1 -.-
     clock_t start_autovec, end_autovec;
     start_autovec = clock();
-    multiply_matrix_autovec(&matrix_A, &matrix_B, &matrix_C);
+    multiply_matrix_autovec(&matrix_A, &m_aux, &matrix_CAutoV);
     end_autovec = clock();
 
     printf("Autovectorization took %ld\n", end_autovec - start_autovec);
+    printf("MATRIX C:\n");
+    print_matrix(&matrix_C);
+    printf("\n");
 
     // -.- Parallel 2 -.-
     clock_t startOpenMp, endOpenMP;
@@ -358,26 +388,49 @@ int main(int argc, char const *argv[])
     // double acum = 0;
 
     startOpenMp = clock();
-    multiply_matrix_omp(&matrix_A, &matrix_B, &matrix_C);
+    multiply_matrix_omp(&matrix_A, &m_aux, &matrix_COMP);
     endOpenMP = clock();
-
-
     
-    printf("OpenMp = %ld\n", endOpenMP - startOpenMp);
+    printf("OpenMp took %ld\n", endOpenMP - startOpenMp);
+    printf("MATRIX C:\n");
+    print_matrix(&matrix_C);
+    printf("\n");
 
 
     // Print result into a file called matrixC.txt  
-    save_matrix(&matrix_C);
-    //printf("MATRIX C:\n");
-    //print_matrix(&matrix_C);
+    //save_matrix(&matrix_C);
 
     // Print whether sequential result matches parallel code
+    int flagError = 0;
+    for(int i=0; i > matrix_C.rows; i++){
+        for(int j=0; j > matrix_C.columns; j++){
+            if(matrix_C.start[i][j] != matrix_CAutoV.start[i][j]){
+                flagError = 1;
+                printf("Error Sequential != Autovec in row: %d, column: %d\n", i , j);
+            }else if(matrix_C.start[i][j] != matrix_COMP.start[i][j]){
+                flagError = 1;
+                printf("Error Sequential != OpenMP in row: %d, column: %d\n", i , j);
+            }
+        }
+    }
+
+    if(flagError == 0){
+        printf("FINE :) \n");
+    }
 
     // Print table with time for each execution
     print_metrics();
 
+    
     free_matrix(&matrix_A);
+    printf("A free\n");
     free_matrix(&matrix_B);
+    printf("B free\n");
     free_matrix(&matrix_C);
+    printf("C free\n");
+
+    free_matrix(&m_aux);
+    printf("Aux free\n"); 
+
     return 0;
 }
