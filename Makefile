@@ -2,11 +2,14 @@ VECT_FLAGS=-O -ftree-vectorize -mavx2 -march=native -fopt-info-vec
 OMP_FLAGS=-fopenmp
 DEBUG_FLAGS=-g -Wall
 
-main: main.c table.o
-	gcc $(DEBUG_FLAGS) $(VECT_FLAGS) $(OMP_FLAGS) main.c table.o -o main
+main: main.c table.o matrix.o
+	gcc $(DEBUG_FLAGS) $(VECT_FLAGS) $(OMP_FLAGS) main.c table.o matrix.o -o main
 
 table.o: table.c table.h
 	gcc table.c -c -o table.o
+
+matrix.o: matrix.c matrix.h
+	gcc matrix.c -c -o matrix.o
 
 # Runs the program to multiply 3x2 matrices
 # 1) Sets the test/ directory

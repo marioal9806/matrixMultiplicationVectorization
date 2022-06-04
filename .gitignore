@@ -1,5 +1,7 @@
 test/
 main
+
 *.o
+*.txt
 
 .vscode
