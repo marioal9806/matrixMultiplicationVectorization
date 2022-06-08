@@ -102,6 +102,14 @@ void print_metrics(clock_t* sequential_metrics, clock_t* autovec_metrics, clock_
         (unsigned long)(100*((double)sequential_metrics[5]/(double)autovec_metrics[5])), 
         (unsigned long)(100*((double)sequential_metrics[5]/(double)omp_metrics[5])));
 	table_commit(table);
+
+    if (autovec_metrics[5] >= sequential_metrics[5] && autovec_metrics[5] >= omp_metrics[5]){
+        printf("Autovectorization multiplication is the fastest method\n");
+    }else if(omp_metrics[5] >= sequential_metrics[5] && omp_metrics[5] >= autovec_metrics[5]){
+        printf("OpenMP multiplication is the fastest method\n");
+    }else{
+        printf("Sequential multiplication is the fastest method\n");
+    }
 }
 
 void measure_method(clock_t* time_array, void (*multiply_method)(struct matrix* mtx_a_p, struct matrix* mtx_b_p, struct matrix* mtx_c_p), 
@@ -222,7 +230,7 @@ int main(int argc, char const *argv[])
         for(int j=0; j < matrix_C.columns; j++){
             if(matrix_C.start[i][j] != matrix_CAutoV.start[i][j]){
                 flagError = 1;
-                printf("Error: Sequential is different from Autovec in row: %d, column: %d\n", i , j);
+                printf("Error: Sequential is different from Autovectorization in row: %d, column: %d\n", i , j);
             }else if(matrix_C.start[i][j] != matrix_COMP.start[i][j]){
                 flagError = 1;
                 printf("Error: Sequential is different from OpenMP in row: %d, column: %d\n", i , j);

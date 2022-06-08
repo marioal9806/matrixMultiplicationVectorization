@@ -91,7 +91,12 @@ int load_matrix(char* file_name, struct matrix* mtx_p) {
         return 1; // malloc failed
     }
     
-    // https://stackoverflow.com/questions/3501338/c-read-file-line-by-line
+    /*
+    -.- -.- -.- -.- -.- -.- -.- -.- -.- -.- -.- -.- -.- -.- -.- -.- -.- -.- -.- -.-
+    -.- C read file line by line. (2010, 17 agosto). Stack Overflow.            -.-
+    -.- https://stackoverflow.com/questions/3501338/c-read-file-line-by-line    -.-
+    -.- -.- -.- -.- -.- -.- -.- -.- -.- -.- -.- -.- -.- -.- -.- -.- -.- -.- -.- -.-
+    */
     int EOF_found = 0;
     for (int i = 0; (i < mtx_p->N) && !EOF_found; i++) {
         for (int j = 0; (j < mtx_p->M) && !EOF_found; j++) {
