@@ -24,7 +24,7 @@
 #define MATRIX_H
 
 #define MAX_INPUT_LEN 256
-#define OUTPUT_FILE "./matrixC.txt"
+#define OUTPUT_FILE "./matrizC.txt"
 
 struct matrix{
     union {

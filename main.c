@@ -154,8 +154,8 @@ int main(int argc, char const *argv[])
     }
 
     // Load matrices
-    ret |= load_matrix("test/matrixA.txt", &matrix_A);
-    ret |= load_matrix("test/matrixB.txt", &matrix_B);
+    ret |= load_matrix("matrizA.txt", &matrix_A);
+    ret |= load_matrix("matrizB.txt", &matrix_B);
     if (ret) {
         printf("Error: Matrices were not loaded correctly\n");
         return 1;
@@ -198,6 +198,9 @@ int main(int argc, char const *argv[])
     printf("Sequential Multiplication\n");
     measure_method(time_sequential, multiply_matrix, &matrix_A, &m_aux, &matrix_C);
     printf("\n");
+    
+    // Print result into a file called matrixC.txt  
+    save_matrix(&matrix_C);
 
     // -.- Parallel 1 -.-
     printf("Autovectorization Multiplication\n");
