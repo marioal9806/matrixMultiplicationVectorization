@@ -1,3 +1,24 @@
+/*
+-.- -.- -.- -.- -.- -.- -.- -.- -.- -.- -.- -.- -.- -.-
+-.-             Tecnológico de Monterrey            -.-
+-.-                                                 -.-
+-.- Materia:                                        -.-
+-.- TE3061 Multiprocesadores                        -.-
+-.-                                                 -.-
+-.- Profesor:                                       -.-
+-.- Alejandro Guajardo Moreno                       -.-
+-.-                                                 -.-
+-.- Equipo:                                         -.-
+-.- A01730557 Mario Alberto Ortega Martínez         -.-
+-.- A00823833 Dafne Avelin Durón Castán             -.-
+-.-                                                 -.-
+-.- Fecha: 8.06.2022                                -.-
+-.- -.- -.- -.- -.- -.- -.- -.- -.- -.- -.- -.- -.- -.-
+-.- In matrix.c our subroutines used in main.c      -.-
+-.- for matrix multiplication are defined.          -.-
+-.- -.- -.- -.- -.- -.- -.- -.- -.- -.- -.- -.- -.- -.-
+*/
+
 #include <stdio.h>
 #include <stdlib.h>
 
@@ -164,6 +185,7 @@ int read_matrix_size(struct matrix* mtx_p) {
     }
     mtx_p->M = atoi(input_buffer);
 
-    mtx_p->size = mtx_p->N * mtx_p->M; // Compute total number of elements
+    // Compute total number of elements
+    mtx_p->size = mtx_p->N * mtx_p->M; 
     return 0;
 }

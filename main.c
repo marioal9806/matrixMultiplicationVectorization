@@ -1,7 +1,21 @@
+// gcc -g -Wall -O -ftree-vectorize -mavx2 -march=native -fopt-info-vec -fopenmp main.c table.o matrix.o -o main
+
 /*
-Equipo:
-Mario Alberto Ortega Martínez
-Dafne Avelin Durón Castán
+-.- -.- -.- -.- -.- -.- -.- -.- -.- -.- -.- -.- -.- -.-
+-.-             Tecnológico de Monterrey            -.-
+-.-                                                 -.-
+-.- Materia:                                        -.-
+-.- TE3061 Multiprocesadores                        -.-
+-.-                                                 -.-
+-.- Profesor:                                       -.-
+-.- Alejandro Guajardo Moreno                       -.-
+-.-                                                 -.-
+-.- Equipo:                                         -.-
+-.- A01730557 Mario Alberto Ortega Martínez         -.-
+-.- A00823833 Dafne Avelin Durón Castán             -.-
+-.-                                                 -.-
+-.- Fecha: 8.06.2022                                -.-
+-.- -.- -.- -.- -.- -.- -.- -.- -.- -.- -.- -.- -.- -.-
 */
 
 #include <stdio.h>
@@ -13,7 +27,6 @@ Dafne Avelin Durón Castán
 
 // Open Source library to print tables to stdout
 #include "table.h"
-
 
 // Disable autovectorization for this function
 __attribute__((optimize("no-tree-vectorize")))
@@ -46,6 +59,7 @@ void multiply_matrix_autovec(struct matrix* mtx_a_p, struct matrix* mtx_b_p, str
 __attribute__((optimize("no-tree-vectorize")))
 void multiply_matrix_omp(struct matrix* mtx_a_p, struct matrix* mtx_b_p, struct matrix* mtx_c_p) {
     double acum = 0;
+    // Parallel region definition for OpenMP
     #pragma omp parallel num_threads(10)
     {
         #pragma omp for reduction(+:acum)
@@ -62,7 +76,14 @@ void multiply_matrix_omp(struct matrix* mtx_a_p, struct matrix* mtx_b_p, struct 
 }
 
 void print_metrics(clock_t* sequential_metrics, clock_t* autovec_metrics, clock_t* omp_metrics) {
-    // https://blog.fourthwoods.com/2013/06/17/pretty-print-tables/
+
+    /*
+    -.- -.- -.- -.- -.- -.- -.- -.- -.- -.- -.- -.- -.- -.- -.- -.- -.- -.-
+    -.- Rager, D. (2013, 17 junio). Pretty Print Tables. Fourth Woods.  -.- 
+    -.- https://blog.fourthwoods.com/2013/06/17/pretty-print-tables/    -.-
+    -.- -.- -.- -.- -.- -.- -.- -.- -.- -.- -.- -.- -.- -.- -.- -.- -.- -.-
+    */
+
     struct table_t* table = table_init(stdout, (unsigned char*)"Time Metrics Table", 1);
 
 	table_row(table, (unsigned char*)"%s%s%s%s", "Corrida", "Serial", "Paralelo 1 (Autovec)", "Paralelo 2 (OpenMP)");
@@ -108,6 +129,7 @@ void measure_method(clock_t* time_array, void (*multiply_method)(struct matrix* 
 
 int main(int argc, char const *argv[])
 {
+    // -.- -.- -.- -.- -.- -.- Preparation -.- -.- -.- -.- -.- -.-
     struct matrix matrix_A, matrix_B, matrix_C, matrix_CAutoV, matrix_COMP;
     int ret = 0;
 
@@ -147,7 +169,7 @@ int main(int argc, char const *argv[])
     allocate_matrix(&matrix_CAutoV);
     allocate_matrix(&matrix_COMP);
 
-    // -.- -.- -.- -.- Transpose matrix_B -.- -.- -.- -.-
+    // -.- -.- -.- -.- -.- -.- Transpose matrix_B -.- -.- -.- -.- -.- -.-
     struct matrix m_aux;
 
     // Aux matrix will have the transposed dimensions of mtx_p
@@ -165,7 +187,7 @@ int main(int argc, char const *argv[])
         }
     }
 
-    // -.- -.- -.- -.- Multiply matrices -.- -.- -.- -.- 
+    // -.- -.- -.- -.- -.- -.- Multiply matrices -.- -.- -.- -.- -.- -.-
     // Arrays to store measured execution time. Measure time on 5 runs, save Average on 6th element.
     clock_t time_sequential[6];
     clock_t time_autovec[6];
@@ -190,6 +212,9 @@ int main(int argc, char const *argv[])
     measure_method(time_omp, multiply_matrix_omp, &matrix_A, &m_aux, &matrix_COMP);
     printf("\n");
 
+    // -.- -.- -.- -.- -.- -.- Results -.- -.- -.- -.- -.- -.-
+    // Print result into a file called matrixC.txt  
+    save_matrix(&matrix_C);
 
     // Print whether sequential result matches parallel code
     int flagError = 0;
@@ -197,21 +222,22 @@ int main(int argc, char const *argv[])
         for(int j=0; j < matrix_C.columns; j++){
             if(matrix_C.start[i][j] != matrix_CAutoV.start[i][j]){
                 flagError = 1;
-                printf("Error Sequential != Autovec in row: %d, column: %d\n", i , j);
+                printf("Error: Sequential is different from Autovec in row: %d, column: %d\n", i , j);
             }else if(matrix_C.start[i][j] != matrix_COMP.start[i][j]){
                 flagError = 1;
-                printf("Error Sequential != OpenMP in row: %d, column: %d\n", i , j);
+                printf("Error: Sequential is different from OpenMP in row: %d, column: %d\n", i , j);
             }
         }
     }
 
     if(flagError == 0){
-        printf("FINE :) \n");
+        printf("The results of all three methods are the same\n");
     }
 
     // Print table with time for each execution
     print_metrics(time_sequential, time_autovec, time_omp);
 
+    // -.- -.- -.- -.- -.- -.- Free -.- -.- -.- -.- -.- -.-
     free_matrix(&matrix_A);
     free_matrix(&matrix_B);
     free_matrix(&matrix_C);
