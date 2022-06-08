@@ -21,6 +21,7 @@ void multiply_matrix(struct matrix* mtx_a_p, struct matrix* mtx_b_p, struct matr
     // Sequential matrix multiplication
     for (int i = 0; i < mtx_a_p->rows; i++) {
         for (int j = 0; j < mtx_b_p->rows; j++) {
+            mtx_c_p->start[i][j] = 0;
             for (int k = 0; k < mtx_b_p->columns; k++) {
                 mtx_c_p->start[i][j] += mtx_a_p->start[i][k] * mtx_b_p->start[j][k];
             }
@@ -131,8 +132,8 @@ int main(int argc, char const *argv[])
     }
 
     // Load matrices
-    ret |= load_matrix("test/matrixA.txt", &matrix_A);
-    ret |= load_matrix("test/matrixB.txt", &matrix_B);
+    ret |= load_matrix("matrizA.txt", &matrix_A);
+    ret |= load_matrix("matrizB.txt", &matrix_B);
     if (ret) {
         printf("Error: Matrices were not loaded correctly\n");
         return 1;
@@ -175,6 +176,9 @@ int main(int argc, char const *argv[])
     printf("Sequential Multiplication\n");
     measure_method(time_sequential, multiply_matrix, &matrix_A, &m_aux, &matrix_C);
     printf("\n");
+    
+    // Print result into a file called matrixC.txt  
+    save_matrix(&matrix_C);
 
     // -.- Parallel 1 -.-
     printf("Autovectorization Multiplication\n");
@@ -186,8 +190,6 @@ int main(int argc, char const *argv[])
     measure_method(time_omp, multiply_matrix_omp, &matrix_A, &m_aux, &matrix_COMP);
     printf("\n");
 
-    // Print result into a file called matrixC.txt  
-    save_matrix(&matrix_C);
 
     // Print whether sequential result matches parallel code
     int flagError = 0;
