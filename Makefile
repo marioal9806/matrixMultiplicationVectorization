@@ -35,6 +35,12 @@ test50x50: main
 	head -n 2500 sample_data/matrixB2500.txt > ./matrizB.txt
 	echo "50\n50\n50\n50" | ./main
 
+test200x1024: main
+	rm -rf ./matrizA.txt ./matrizB.txt
+	head -n 204800 sample_data/matrixA1048576.txt > ./matrizA.txt
+	head -n 204800 sample_data/matrixB1048576.txt > ./matrizB.txt
+	echo "200\n1024\n1024\n200" | ./main
+
 test1024x1024: main
 	rm -rf ./matrizA.txt ./matrizB.txt
 	head -n 1048576 sample_data/matrixA1048576.txt > ./matrizA.txt
