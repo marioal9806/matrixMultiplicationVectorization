@@ -103,9 +103,9 @@ void print_metrics(clock_t* sequential_metrics, clock_t* autovec_metrics, clock_
         (unsigned long)(100*((double)sequential_metrics[5]/(double)omp_metrics[5])));
 	table_commit(table);
 
-    if (autovec_metrics[5] >= sequential_metrics[5] && autovec_metrics[5] >= omp_metrics[5]){
+    if (autovec_metrics[5] <= sequential_metrics[5] && autovec_metrics[5] <= omp_metrics[5]){
         printf("Autovectorization multiplication is the fastest method\n");
-    }else if(omp_metrics[5] >= sequential_metrics[5] && omp_metrics[5] >= autovec_metrics[5]){
+    }else if(omp_metrics[5] <= sequential_metrics[5] && omp_metrics[5] <= autovec_metrics[5]){
         printf("OpenMP multiplication is the fastest method\n");
     }else{
         printf("Sequential multiplication is the fastest method\n");
