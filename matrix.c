@@ -77,24 +77,32 @@ int load_matrix(char* file_name, struct matrix* mtx_p) {
             read = getline(&line, &len, fp);
             if (read == EOF) {
                 EOF_found = 1;
+                continue;
             }
 
             // Check if file has more numbers than expected
-            if (rows_counter > mtx_p->size) {
-                printf("Error: File has more items than expected\n");
-                free_matrix(mtx_p);
-                fclose(fp);
-                if (line) {
-                    free(line);
-                }
-                return 1;
-            }
-
-            mtx_p->start[i][j] = atof(line);
             rows_counter++;
+            mtx_p->start[i][j] = atof(line);
         }
     }
-    
+
+    // Check if file has more numbers than expected
+    if (!EOF_found) {
+        read = getline(&line, &len, fp);
+        if (read != EOF) {
+            rows_counter++;
+        }
+        if (rows_counter > mtx_p->size) {
+            printf("Error: File has more items than expected\n");
+            free_matrix(mtx_p);
+            fclose(fp);
+            if (line) {
+                free(line);
+            }
+            return 1;
+        }
+    }
+
     // Check if file has less numbers than expected
     if (rows_counter < mtx_p->size) {
         printf("Error: File has less items than expected\n");
