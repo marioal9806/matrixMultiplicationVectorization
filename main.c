@@ -193,8 +193,8 @@ int main(int argc, char const *argv[])
 
     // Print whether sequential result matches parallel code
     int flagError = 0;
-    for(int i=0; i > matrix_C.rows; i++){
-        for(int j=0; j > matrix_C.columns; j++){
+    for(int i=0; i < matrix_C.rows; i++){
+        for(int j=0; j < matrix_C.columns; j++){
             if(matrix_C.start[i][j] != matrix_CAutoV.start[i][j]){
                 flagError = 1;
                 printf("Error Sequential != Autovec in row: %d, column: %d\n", i , j);
