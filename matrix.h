@@ -1,3 +1,25 @@
+/*
+-.- -.- -.- -.- -.- -.- -.- -.- -.- -.- -.- -.- -.- -.-
+-.-             Tecnológico de Monterrey            -.-
+-.-                                                 -.-
+-.- Materia:                                        -.-
+-.- TE3061 Multiprocesadores                        -.-
+-.-                                                 -.-
+-.- Profesor:                                       -.-
+-.- Alejandro Guajardo Moreno                       -.-
+-.-                                                 -.-
+-.- Equipo:                                         -.-
+-.- A01730557 Mario Alberto Ortega Martínez         -.-
+-.- A00823833 Dafne Avelin Durón Castán             -.-
+-.-                                                 -.-
+-.- Fecha: 8.06.2022                                -.-
+-.- -.- -.- -.- -.- -.- -.- -.- -.- -.- -.- -.- -.- -.-
+-.- In matrix.h our subroutines and structures      -.-
+-.- used in main.c for matrix multiplication        -.-
+-.- are declared.                                   -.-
+-.- -.- -.- -.- -.- -.- -.- -.- -.- -.- -.- -.- -.- -.-
+*/
+
 #ifndef MATRIX_H
 #define MATRIX_H
 
